@@ -12,9 +12,10 @@ class Petitioner
       @bot.api.send_message(chat_id: @id, text: replies['start'])
       sleep(2)
       set_state
-      handle_request
+      @bot.api.send_message(chat_id: @id, text: replies['registration']['name']['message'])
     when 'get_name'
       set_info('name')
+      @bot.api.send_message(chat_id: @id, text: replies['registration']['organization']['message'])
     when 'get_organization'
       set_info('organization')
     when 'registrated'
@@ -63,7 +64,6 @@ class Petitioner
     if @message.text
       REDIS.set("#{@id}_#{type}", @message.text)
       set_state
-      @bot.api.send_message(chat_id: @id, text: replies['registration'][type]['message'])
     else
       @bot.api.send_message(chat_id: @id, text: replies['registration'][type]['error'])
     end
