@@ -9,7 +9,7 @@ class Mari
     if @message.respond_to? 'data'
       verdict, chat_id, username = @message.data.split
       @bot.api.send_message(chat_id: chat_id, text: @replies['verdict']['user'][verdict])
-      @bot.api.send_message(chat_id: chat_id, text: replies['waiting']['message'])
+      @bot.api.send_message(chat_id: chat_id, text: @replies['waiting']['message'])
       @bot.api.send_message(chat_id: MARI_ID, text: @replies['verdict']['mari'][verdict] + username)
     else
       @bot.api.send_message(chat_id: MARI_ID, text: 'Да, вы Мари!')

@@ -11,8 +11,8 @@ class Petitioner
     when nil
       @bot.api.send_message(chat_id: @id, text: replies['start'])
       sleep(2)
-      @bot.api.send_message(chat_id: @id, text: replies['registration']['name']['message'])
       set_state
+      handle_request
     when 'get_name'
       set_info('name')
     when 'get_organization'
@@ -61,7 +61,7 @@ class Petitioner
 
   def set_info(type)
     if @message.text
-      set_name(@message.text)
+      REDIS.set("#{@id}_#{type}", @message.text)
       set_state
       @bot.api.send_message(chat_id: @id, text: replies['registration'][type]['message'])
     else
@@ -86,10 +86,6 @@ class Petitioner
     @state = next_state
   end
 
-  def set_name(name)
-    REDIS.set("#{@id}_name", name)
-  end
-
   def set_by_type(type, value)
     REDIS.hmset("#{@id}_#{event_id}", type, value)
   end
@@ -102,6 +98,14 @@ class Petitioner
 
   def username
     @message.from.username
+  end
+
+  def name
+    REDIS.get("#{@id}_name")
+  end
+
+  def organization
+    REDIS.get("#{@id}_organization")
   end
 
   def event_id
@@ -127,6 +131,8 @@ class Petitioner
     event_info = REDIS.hmget("#{@id}_#{event_id}", 'username', 'date', 'place', 'info')
     [
       "Пользователь @#{event_info[0]} прислал запрос на мероприятие.",
+      "Пользователь представился как: #{name}",
+      "Пользователь указал следующую организацию: #{organization}",
       "Дата и время: #{event_info[1]}.",
       "Место: #{event_info[2]}",
       "Описание: #{event_info[3]}",
