@@ -18,6 +18,7 @@ class Petitioner
       @bot.api.send_message(chat_id: @id, text: replies['registration']['organization']['message'])
     when 'get_organization'
       set_info('organization')
+      handle_request
     when 'registrated'
       @bot.api.send_message(chat_id: @id, text: replies['registration']['finished']['message'])
       set_state
@@ -133,7 +134,7 @@ class Petitioner
       "Пользователь @#{event_info[0]} прислал запрос на мероприятие.",
       "Пользователь представился как: #{name}",
       "Пользователь указал следующую организацию: #{organization}",
-      "Дата и время: #{event_info[1]}.",
+      "Дата и время: #{event_info[1]}",
       "Место: #{event_info[2]}",
       "Описание: #{event_info[3]}",
       "ID заявки: #{@id}_#{event_id}"
