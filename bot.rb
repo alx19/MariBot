@@ -1,5 +1,3 @@
-require_relative 'user'
-
 class Bot
   def initialize(message, bot)
     @bot = bot

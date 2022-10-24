@@ -1,4 +1,9 @@
 require 'telegram/bot'
+require 'redis'
+require 'yaml'
+
+require_relative 'petitioner'
+require_relative 'mari'
 require_relative 'config'
 require_relative 'bot'
 
