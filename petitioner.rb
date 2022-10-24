@@ -7,7 +7,10 @@ class Petitioner
   end
 
   def handle_request
-    return unless @message.text
+    unless @message.text
+      @bot.api.send_message(chat_id: @id, text: replies['error']['message'])
+      return
+    end
 
     case @state
     when nil
