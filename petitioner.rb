@@ -7,6 +7,8 @@ class Petitioner
   end
 
   def handle_request
+    return unless @message.text
+
     case @state
     when nil
       @bot.api.send_message(chat_id: @id, text: replies['start'])
@@ -28,30 +30,18 @@ class Petitioner
       set_state
       set_event
     when 'place_request'
-      if @message.text
-        set_by_type('date', @message.text)
-        @bot.api.send_message(chat_id: @id, text: replies['request']['place']['message'])
-        set_state
-      else
-        @bot.api.send_message(chat_id: @id, text: replies['request']['date']['error'])
-      end
+      set_by_type('date', @message.text)
+      @bot.api.send_message(chat_id: @id, text: replies['request']['place']['message'])
+      set_state
     when 'info_request'
-      if @message.text
-        set_by_type('place', @message.text)
-        @bot.api.send_message(chat_id: @id, text: replies['request']['info']['message'])
-        set_state
-      else
-        @bot.api.send_message(chat_id: @id, text: replies['request']['place']['error'])
-      end
+      set_by_type('place', @message.text)
+      @bot.api.send_message(chat_id: @id, text: replies['request']['info']['message'])
+      set_state
     when 'submitted'
-      if @message.text
-        set_by_type('info', @message.text)
-        @bot.api.send_message(chat_id: @id, text: replies['request']['submitted']['message'])
-        set_state
-        handle_request
-      else
-        @bot.api.send_message(chat_id: @id, text: replies['request']['info']['error'])
-      end
+      set_by_type('info', @message.text)
+      @bot.api.send_message(chat_id: @id, text: replies['request']['submitted']['message'])
+      set_state
+      handle_request
     when 'waiting'
       @bot.api.send_message(chat_id: MARI_ID, text: mari_notification, reply_markup: mari_keyboard)
       @bot.api.send_message(chat_id: @id, text: replies['waiting']['message'])
@@ -62,12 +52,8 @@ class Petitioner
   private
 
   def set_info(type)
-    if @message.text
-      REDIS.set("#{@id}_#{type}", @message.text)
-      set_state
-    else
-      @bot.api.send_message(chat_id: @id, text: replies['registration'][type]['error'])
-    end
+    REDIS.set("#{@id}_#{type}", @message.text)
+    set_state
   end
 
   def replies
