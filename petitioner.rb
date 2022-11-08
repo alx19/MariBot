@@ -35,7 +35,7 @@ class Petitioner
     when 'date_request'
       set_by_type('event_name', @message.text)
       @bot.api.send_message(chat_id: @id, text: replies['request']['date']['message'])
-      set_event
+      set_state
     when 'place_request'
       set_by_type('date', @message.text)
       @bot.api.send_message(chat_id: @id, text: replies['request']['place']['message'])
@@ -118,7 +118,7 @@ class Petitioner
     when 'place_request' then 'info_request'
     when 'info_request' then 'submitted'
     when 'submitted' then 'waiting'
-    when 'waiting' then 'date_request'
+    when 'waiting' then 'event_name_request'
     end
   end
 
