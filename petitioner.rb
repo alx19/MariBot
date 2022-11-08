@@ -87,7 +87,7 @@ class Petitioner
   def set_event
     event_id = REDIS.incr('event_id')
     REDIS.set("#{@id}_current_event", event_id)
-    REDIS.hmset("#{@id}_#{event_id}", 'username', username)
+    REDIS.hmset("#{@id}_#{event_id}", 'username', username, 'chat_id', @id)
   end
 
   def username
@@ -104,6 +104,10 @@ class Petitioner
 
   def event_id
     REDIS.get("#{@id}_current_event")
+  end
+
+  def global_id
+    "#{@id}_#{event_id}"
   end
 
   # this state machine is a shame
@@ -123,33 +127,25 @@ class Petitioner
   end
 
   def mari_notification
-    event_info = REDIS.hmget("#{@id}_#{event_id}", 'username', 'date', 'place', 'info')
+    event_info = REDIS.hmget(global_id, 'username', 'event_name', 'date', 'place', 'info')
     [
       "Пользователь @#{event_info[0]} прислал запрос на мероприятие.",
       "Пользователь представился как: #{name}",
       "Пользователь указал следующую организацию: #{organization}",
-      "Пользователь указал следующее название мероприятия: #{event_name}",
-      "Дата и время: #{event_info[1]}",
-      "Место: #{event_info[2]}",
-      "Описание: #{event_info[3]}",
-      "ID заявки: #{@id}_#{event_id}"
+      "Пользователь указал следующее название мероприятия: #{event_info[1]}",
+      "Дата и время: #{event_info[2]}",
+      "Место: #{event_info[3]}",
+      "Описание: #{event_info[4]}",
+      "ID заявки: #{global_id}"
     ].join("\n")
-  end
-
-  def event_name
-    REDIS.hmget("#{@id}_#{event_id}", 'event_name').first
   end
 
   def mari_keyboard
     kb = [
-      Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Принять', callback_data: "accept #{callback_data}"),
-      Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Отказать по времени', callback_data: "untimely #{callback_data}"),
-      Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Отказать', callback_data: "reject #{callback_data}")
+      Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Принять', callback_data: "accept #{global_id}"),
+      Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Отказать по времени', callback_data: "untimely #{global_id}"),
+      Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Отказать', callback_data: "reject #{global_id}")
     ]
     Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: kb)
-  end
-
-  def callback_data
-    [@id, username, event_name].join(' ')
   end
 end
