@@ -28,9 +28,13 @@ class Petitioner
       @bot.api.send_message(chat_id: @id, text: replies['registration']['finished']['message'])
       set_state
       handle_request
-    when 'date_request'
-      @bot.api.send_message(chat_id: @id, text: replies['request']['date']['message'])
+    when 'event_name_request'
+      @bot.api.send_message(chat_id: @id, text: replies['request']['event_name']['message'])
       set_state
+      set_event
+    when 'date_request'
+      set_by_type('event_name', @message.text)
+      @bot.api.send_message(chat_id: @id, text: replies['request']['date']['message'])
       set_event
     when 'place_request'
       set_by_type('date', @message.text)
@@ -108,7 +112,8 @@ class Petitioner
     when nil then 'get_name'
     when 'get_name' then 'get_organization'
     when 'get_organization' then 'registrated'
-    when 'registrated' then 'date_request'
+    when 'registrated' then 'event_name_request'
+    when 'event_name_request' then 'date_request'
     when 'date_request' then 'place_request'
     when 'place_request' then 'info_request'
     when 'info_request' then 'submitted'
@@ -123,11 +128,16 @@ class Petitioner
       "Пользователь @#{event_info[0]} прислал запрос на мероприятие.",
       "Пользователь представился как: #{name}",
       "Пользователь указал следующую организацию: #{organization}",
+      "Пользователь указал следующее название мероприятия: #{event_name}",
       "Дата и время: #{event_info[1]}",
       "Место: #{event_info[2]}",
       "Описание: #{event_info[3]}",
       "ID заявки: #{@id}_#{event_id}"
     ].join("\n")
+  end
+
+  def event_name
+    REDIS.hmget("#{@id}_#{event_id}", 'event_name').first
   end
 
   def mari_keyboard
@@ -140,6 +150,6 @@ class Petitioner
   end
 
   def callback_data
-    "#{@id} #{username}"
+    [@id, username, event_name].join(' ')
   end
 end
