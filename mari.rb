@@ -22,6 +22,7 @@ class Mari
   def send_message(params)
     begin
       @bot.api.send_message(**params)
+    rescue
     end
   end
 
