@@ -10,6 +10,8 @@ require_relative 'bot'
 Telegram::Bot::Client.run(TOKEN) do |bot|
   begin
     bot.listen do |message|
+      next if message.nil? || message.from.nil?
+
       Bot.new(message, bot).handle_request
     end
   rescue

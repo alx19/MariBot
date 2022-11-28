@@ -1,7 +1,5 @@
 class Bot
   def initialize(message, bot)
-    return if message.nil? || message.from.nil?
-
     @bot = bot
     @message = message
     @user_id = message.from.id
