@@ -11,4 +11,7 @@ Telegram::Bot::Client.run(TOKEN) do |bot|
   bot.listen do |message|
     Bot.new(message, bot).handle_request
   end
+  rescue
+    bot.api.send_message(chat_id: MARI_ID, text: 'Бот сломался!')
+  end
 end

@@ -9,11 +9,19 @@ class Mari
     if @message.respond_to? 'data'
       @verdict, @global_id = @message.data.split
       event_data
-      @bot.api.send_message(chat_id: @chat_id, text: prepare_verdict('user'))
-      @bot.api.send_message(chat_id: @chat_id, text: @replies['waiting']['message'])
-      @bot.api.send_message(chat_id: MARI_ID, text: prepare_verdict('mari'))
+      send_message(chat_id: @chat_id, text: prepare_verdict('user'))
+      send_message(chat_id: @chat_id, text: @replies['waiting']['message'])
+      send_message(chat_id: MARI_ID, text: prepare_verdict('mari'))
     else
-      @bot.api.send_message(chat_id: MARI_ID, text: 'Да, вы Мари!')
+      send_message(chat_id: MARI_ID, text: 'Да, вы Мари!')
+    end
+  end
+
+  private
+
+  def send_message(params)
+    begin
+      @bot.api.send_message(**params)
     end
   end
 

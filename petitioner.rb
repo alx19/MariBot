@@ -8,55 +8,61 @@ class Petitioner
 
   def handle_request
     unless @message.text
-      @bot.api.send_message(chat_id: @id, text: replies['error']['message'])
+      send_message(chat_id: @id, text: replies['error']['message'])
       return
     end
 
     case @state
     when nil
-      @bot.api.send_message(chat_id: @id, text: replies['start'])
+      send_message(chat_id: @id, text: replies['start'])
       sleep(2)
       set_state
-      @bot.api.send_message(chat_id: @id, text: replies['registration']['name']['message'])
+      send_message(chat_id: @id, text: replies['registration']['name']['message'])
     when 'get_name'
       set_info('name')
-      @bot.api.send_message(chat_id: @id, text: replies['registration']['organization']['message'])
+      send_message(chat_id: @id, text: replies['registration']['organization']['message'])
     when 'get_organization'
       set_info('organization')
       handle_request
     when 'registrated'
-      @bot.api.send_message(chat_id: @id, text: replies['registration']['finished']['message'])
+      send_message(chat_id: @id, text: replies['registration']['finished']['message'])
       set_state
       handle_request
     when 'event_name_request'
-      @bot.api.send_message(chat_id: @id, text: replies['request']['event_name']['message'])
+      send_message(chat_id: @id, text: replies['request']['event_name']['message'])
       set_state
       set_event
     when 'date_request'
       set_by_type('event_name', @message.text)
-      @bot.api.send_message(chat_id: @id, text: replies['request']['date']['message'])
+      send_message(chat_id: @id, text: replies['request']['date']['message'])
       set_state
     when 'place_request'
       set_by_type('date', @message.text)
-      @bot.api.send_message(chat_id: @id, text: replies['request']['place']['message'])
+      send_message(chat_id: @id, text: replies['request']['place']['message'])
       set_state
     when 'info_request'
       set_by_type('place', @message.text)
-      @bot.api.send_message(chat_id: @id, text: replies['request']['info']['message'])
+      send_message(chat_id: @id, text: replies['request']['info']['message'])
       set_state
     when 'submitted'
       set_by_type('info', @message.text)
-      @bot.api.send_message(chat_id: @id, text: replies['request']['submitted']['message'])
+      send_message(chat_id: @id, text: replies['request']['submitted']['message'])
       set_state
       handle_request
     when 'waiting'
-      @bot.api.send_message(chat_id: MARI_ID, text: mari_notification, reply_markup: mari_keyboard)
-      @bot.api.send_message(chat_id: @id, text: replies['waiting']['message'])
+      send_message(chat_id: MARI_ID, text: mari_notification, reply_markup: mari_keyboard)
+      send_message(chat_id: @id, text: replies['waiting']['message'])
       set_state
     end
   end
 
   private
+
+  def send_message(params)
+    begin
+      @bot.api.send_message(**params)
+    end
+  end
 
   def set_info(type)
     REDIS.set("#{@id}_#{type}", @message.text)
