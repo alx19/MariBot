@@ -59,10 +59,9 @@ class Petitioner
   private
 
   def send_message(params)
-    begin
-      @bot.api.send_message(**params)
-    rescue
-    end
+    @bot.api.send_message(**params)
+  rescue => e
+    MyLogger.new.log(e)
   end
 
   def set_info(type)
