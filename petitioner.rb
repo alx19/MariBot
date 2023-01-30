@@ -50,7 +50,7 @@ class Petitioner
       set_state
       handle_request
     when 'waiting'
-      send_message(chat_id: MARI_ID, text: mari_notification, reply_markup: mari_keyboard)
+      send_message(chat_id: MARI_ID, text: mari_notification, reply_markup: mari_keyboard, parse_mode: 'HTML')
       send_message(chat_id: @id, text: replies['waiting']['message'])
       set_state
     end
@@ -134,8 +134,13 @@ class Petitioner
 
   def mari_notification
     event_info = REDIS.hmget(global_id, 'username', 'event_name', 'date', 'place', 'info')
+    event_info[0] = if event_info[0] == ''
+                      "<a href=\"tg://user?id=#{@id}\">#{name}</a>"
+                    else
+                      "@#{event_info[0]}"
+                    end
     [
-      "Пользователь @#{event_info[0]} прислал запрос на мероприятие.",
+      "Пользователь #{event_info[0]} прислал запрос на мероприятие.",
       "Пользователь представился как: #{name}",
       "Пользователь указал следующую организацию: #{organization}",
       "Пользователь указал следующее название мероприятия: #{event_info[1]}",

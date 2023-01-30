@@ -11,7 +11,7 @@ class Mari
       event_data
       send_message(chat_id: @chat_id, text: prepare_verdict('user'))
       send_message(chat_id: @chat_id, text: @replies['waiting']['message'])
-      send_message(chat_id: MARI_ID, text: prepare_verdict('mari'))
+      send_message(chat_id: MARI_ID, text: prepare_verdict('mari'), parse_mode: 'HTML')
     else
       send_message(chat_id: MARI_ID, text: 'Да, вы Мари!')
     end
@@ -33,5 +33,10 @@ class Mari
 
   def event_data
     @chat_id, @username, @event_name = REDIS.hmget(@global_id, 'chat_id', 'username', 'event_name')
+    @username = if @username == ''
+                  "<a href=\"tg://user?id=#{@chat_id}\">#{@chat_id}</a>"
+                else
+                  "@#{@username}"
+                end
   end
 end
