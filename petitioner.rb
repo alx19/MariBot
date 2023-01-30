@@ -1,4 +1,9 @@
 class Petitioner
+  OPTIONS = %w[
+    Предложить\ мероприятие Пройти\ регистрацию
+    Изменить\ организацию Изменить\ имя
+  ].freeze
+
   def initialize(id, bot, message)
     @id = id
     @bot = bot
@@ -12,22 +17,36 @@ class Petitioner
       return
     end
 
+    return handle_custom_option(@message.text) if OPTIONS.include?(@message.text)
+
+    state_machine
+  end
+
+  private
+
+  def state_machine
     case @state
     when nil
       send_message(chat_id: @id, text: replies['start'])
-      sleep(2)
+      sleep(1)
       set_state
-      send_message(chat_id: @id, text: replies['registration']['name']['message'])
+      state_machine
+    when 'options'
+      send_keyboard
     when 'get_name'
       set_info('name')
-      send_message(chat_id: @id, text: replies['registration']['organization']['message'])
+      if registrated?
+        handle_request
+      else
+        send_message(chat_id: @id, text: replies['registration']['organization']['message'])
+      end
     when 'get_organization'
       set_info('organization')
       handle_request
     when 'registrated'
+      registration_done
       send_message(chat_id: @id, text: replies['registration']['finished']['message'])
-      set_state
-      handle_request
+      send_keyboard
     when 'event_name_request'
       send_message(chat_id: @id, text: replies['request']['event_name']['message'])
       set_state
@@ -47,16 +66,11 @@ class Petitioner
     when 'submitted'
       set_by_type('info', @message.text)
       send_message(chat_id: @id, text: replies['request']['submitted']['message'])
-      set_state
-      handle_request
-    when 'waiting'
+      send_keyboard
       send_message(chat_id: MARI_ID, text: mari_notification, reply_markup: mari_keyboard, parse_mode: 'HTML')
-      send_message(chat_id: @id, text: replies['waiting']['message'])
       set_state
     end
   end
-
-  private
 
   def send_message(params)
     @bot.api.send_message(**params)
@@ -64,9 +78,46 @@ class Petitioner
     MyLogger.new.log(e)
   end
 
+  def send_keyboard
+    options = if registrated?
+                OPTIONS
+              else
+                %w[Пройти\ регистрацию]
+              end
+    kb = options.map { |o| Telegram::Bot::Types::KeyboardButton.new(text: o) }
+    markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: kb, one_time_keyboard: true)
+    send_message(chat_id: @id, text: 'Что вы хотите сделать?', reply_markup: markup)
+  end
+
+  def handle_custom_option(option)
+    case option
+    when 'Пройти регистрацию'
+      if registrated?
+        send_message(chat_id: @id, text: replies['registration']['noneed']['message'])
+        send_keyboard
+      else
+        set_state('get_name')
+        send_message(chat_id: @id, text: replies['registration']['name']['message'])
+      end
+    when 'Предложить мероприятие'
+      set_state('event_name_request')
+      state_machine
+    when 'Изменить имя'
+      set_state('get_name')
+      send_message(chat_id: @id, text: replies['registration']['name']['message'])
+    when 'Изменить организацию'
+      set_state('get_organization')
+      send_message(chat_id: @id, text: replies['registration']['organization']['message'])
+    end
+  end
+
   def set_info(type)
     REDIS.set("#{@id}_#{type}", @message.text)
-    set_state
+    if registrated?
+      set_state('options')
+    else
+      set_state
+    end
   end
 
   def replies
@@ -81,9 +132,10 @@ class Petitioner
     REDIS.get("#{@id}_state")
   end
 
-  def set_state
-    REDIS.set("#{@id}_state", next_state)
-    @state = next_state
+  def set_state(selected_state = nil)
+    selected_state ||= next_state
+    REDIS.set("#{@id}_state", selected_state)
+    @state = selected_state
   end
 
   def set_by_type(type, value)
@@ -108,6 +160,14 @@ class Petitioner
     REDIS.get("#{@id}_organization")
   end
 
+  def registration_done
+    REDIS.set("#{@id}_registration", true)
+  end
+
+  def registrated?
+    REDIS.get("#{@id}_registration") == 'true'
+  end
+
   def event_id
     REDIS.get("#{@id}_current_event")
   end
@@ -119,7 +179,7 @@ class Petitioner
   # this state machine is a shame
   def next_state
     case @state
-    when nil then 'get_name'
+    when nil then 'options'
     when 'get_name' then 'get_organization'
     when 'get_organization' then 'registrated'
     when 'registrated' then 'event_name_request'
@@ -127,8 +187,7 @@ class Petitioner
     when 'date_request' then 'place_request'
     when 'place_request' then 'info_request'
     when 'info_request' then 'submitted'
-    when 'submitted' then 'waiting'
-    when 'waiting' then 'event_name_request'
+    when 'submitted' then 'options'
     end
   end
 
