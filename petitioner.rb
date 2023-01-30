@@ -44,7 +44,6 @@ class Petitioner
       set_info('organization')
       handle_request
     when 'registrated'
-      registration_done
       send_message(chat_id: @id, text: replies['registration']['finished']['message'])
       send_keyboard
     when 'event_name_request'
@@ -160,12 +159,8 @@ class Petitioner
     REDIS.get("#{@id}_organization")
   end
 
-  def registration_done
-    REDIS.set("#{@id}_registration", true)
-  end
-
   def registrated?
-    REDIS.get("#{@id}_registration") == 'true'
+    name && organization
   end
 
   def event_id
