@@ -74,7 +74,7 @@ class Petitioner
   def send_message(params)
     @bot.api.send_message(**params)
   rescue => e
-    MyLogger.new.log(e)
+    MyLogger.new.log(e, params[:text])
   end
 
   def send_keyboard
