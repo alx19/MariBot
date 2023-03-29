@@ -14,6 +14,7 @@ Telegram::Bot::Client.run(TOKEN) do |bot|
 
     Bot.new(message, bot).handle_request
   end
-rescue
+rescue => e
+  MyLogger.new.log(e)
   retry
 end
