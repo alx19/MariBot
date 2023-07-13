@@ -83,7 +83,7 @@ class Petitioner
               else
                 %w[Пройти\ регистрацию]
               end
-    kb = options.map { |o| Telegram::Bot::Types::KeyboardButton.new(text: o) }
+    kb = options.map { |o| [Telegram::Bot::Types::KeyboardButton.new(text: o)] }
     markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: kb, one_time_keyboard: true)
     send_message(chat_id: @id, text: 'Что вы хотите сделать?', reply_markup: markup)
   end
@@ -188,14 +188,8 @@ class Petitioner
 
   def mari_notification
     event_info = REDIS.hmget(global_id, 'username', 'event_name', 'date', 'place', 'info')
-    event_info[0] = if event_info[0] == ''
-                      "<a href=\"tg://user?id=#{@id}\">#{name}</a>"
-                    else
-                      "@#{event_info[0]}"
-                    end
     [
-      "Пользователь #{event_info[0]} прислал запрос на мероприятие.",
-      "Пользователь представился как: #{name}",
+      "Пользователь <a href=\"tg://user?id=#{@id}\">#{name}</a> прислал запрос на мероприятие.",
       "Пользователь указал следующую организацию: #{organization}",
       "Пользователь указал следующее название мероприятия: #{event_info[1]}",
       "Дата и время: #{event_info[2]}",
@@ -207,9 +201,9 @@ class Petitioner
 
   def mari_keyboard
     kb = [
-      Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Принять', callback_data: "accept #{global_id}"),
-      Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Отказать по времени', callback_data: "untimely #{global_id}"),
-      Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Отказать', callback_data: "reject #{global_id}")
+      [Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Принять', callback_data: "accept #{global_id}")],
+      [Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Отказать по времени', callback_data: "untimely #{global_id}")],
+      [Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Отказать', callback_data: "reject #{global_id}")]
     ]
     Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: kb)
   end
