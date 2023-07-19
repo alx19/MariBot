@@ -189,7 +189,7 @@ class Petitioner
   def mari_notification
     event_info = REDIS.hmget(global_id, 'username', 'event_name', 'date', 'place', 'info')
     [
-      "Пользователь <a href=\"tg://user?id=#{@id}\">#{name}</a> прислал запрос на мероприятие.",
+      "Пользователь <a href=\"tg://user?id=#{@id}\">#{name}</a> @#{event_info[0]} прислал запрос на мероприятие.",
       "Пользователь указал следующую организацию: #{organization}",
       "Пользователь указал следующее название мероприятия: #{event_info[1]}",
       "Дата и время: #{event_info[2]}",
