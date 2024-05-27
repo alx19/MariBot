@@ -13,13 +13,13 @@ class Bot
 
   def user
     if message_from_mari?
-      Mari.new(@bot, @message)
+      Mari.new(@user_id, @bot, @message)
     else
       Petitioner.new(@user_id, @bot, @message)
     end
   end
 
-  def message_from_mari?
-    @user_id == MARI_ID
+  def message_from_admin?
+    ADMINS.include?(@user_id)
   end
 end
