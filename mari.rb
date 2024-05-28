@@ -1,6 +1,6 @@
 class Mari
   def initialize(admin_id, bot, message)
-    @id = admin_id
+    @admin_id = admin_id
     @bot = bot
     @message = message
     @replies ||= YAML.load_file('replies.yml')
@@ -13,7 +13,7 @@ class Mari
       send_message(chat_id: @chat_id, text: prepare_verdict('user'))
       send_message(chat_id: @chat_id, text: @replies['waiting']['message'])
     else
-      send_message(chat_id: admin_id, text: 'Да, вы Мари! Ну или Алиса.')
+      send_message(chat_id: @admin_id, text: 'Да, вы Мари! Ну или Алиса.')
     end
   end
 
