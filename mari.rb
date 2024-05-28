@@ -23,8 +23,8 @@ class Mari
   def update_messages
     messages = REDIS.hmget("messages_#{@global_id}", 'text', MARI_ID, ALICE_ID)
     new_text = [messages[0], who_edit, verdict_to_ru].join("\n")
-    edit_message(text: new_text, chat_id: MARI_ID, message_id: messages[1])
-    edit_message(text: new_text, chat_id: ALICE_ID, message_id: messages[2])
+    edit_message(text: new_text, chat_id: MARI_ID, message_id: messages[1], parse_mode: 'HTML')
+    edit_message(text: new_text, chat_id: ALICE_ID, message_id: messages[2], parse_mode: 'HTML')
   end
 
   def send_message(params)
