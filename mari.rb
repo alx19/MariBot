@@ -12,6 +12,7 @@ class Mari
       event_data
       send_message(chat_id: @chat_id, text: prepare_verdict('user'))
       send_message(chat_id: @chat_id, text: @replies['waiting']['message'])
+      update_messages
     else
       send_message(chat_id: @admin_id, text: 'Да, вы Мари! Ну или Алиса.')
     end
@@ -33,15 +34,16 @@ class Mari
     end
   end
 
-  def edit_message(text, admin, verdict, params)
+  def edit_message(params)
+    @bot.api.edit_message_text(**params)
     begin
-      @bot.api.edit_message(**params)
+      @bot.api.edit_message_text(**params)
     rescue
     end
   end
 
   def who
-    case @id
+    case @admin_id
     when MARI_ID then 'Мари'
     when ALICE_ID then 'Алиса'
     end
