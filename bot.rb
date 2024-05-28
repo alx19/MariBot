@@ -12,7 +12,7 @@ class Bot
   private
 
   def user
-    if message_from_mari?
+    if message_from_admin?
       Mari.new(@user_id, @bot, @message)
     else
       Petitioner.new(@user_id, @bot, @message)
