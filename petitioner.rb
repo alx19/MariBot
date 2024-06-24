@@ -81,7 +81,7 @@ class Petitioner
     text = mari_notification
     messages = ADMINS.map do |admin|
       message = send_message(chat_id: admin, text: text, reply_markup: mari_keyboard, parse_mode: 'HTML')
-      [admin, message['result']['message_id']]
+      [admin, message.message_id]
     end
     REDIS.hmset("messages_#{global_id}", 'text', text, *messages.flatten)
   end
