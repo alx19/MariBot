@@ -6,14 +6,14 @@ class Bot
   end
 
   def handle_request
+    return if @message.is_a? Telegram::Bot::Types::ChatMemberUpdated
+
     user.handle_request
   end
 
   private
 
   def user
-    return if @message.is_a? Telegram::Bot::Types::ChatMemberUpdated
-
     if message_from_admin?
       Mari.new(@user_id, @bot, @message)
     else
