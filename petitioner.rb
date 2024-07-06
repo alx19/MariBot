@@ -66,7 +66,7 @@ class Petitioner
       set_by_type('info', @message.text)
       send_message(chat_id: @id, text: replies['request']['submitted']['message'])
       send_keyboard
-      send_message(chat_id: MARI_ID, text: mari_notification, reply_markup: mari_keyboard, parse_mode: 'HTML')
+      notify_admins
       set_state
     end
   end
@@ -75,6 +75,15 @@ class Petitioner
     @bot.api.send_message(**params)
   rescue => e
     MyLogger.new.log(e, params[:text])
+  end
+
+  def notify_admins
+    text = mari_notification
+    messages = ADMINS.map do |admin|
+      message = send_message(chat_id: admin, text: text, reply_markup: mari_keyboard, parse_mode: 'HTML')
+      [admin, message.message_id]
+    end
+    REDIS.hmset("messages_#{global_id}", 'text', text, *messages.flatten)
   end
 
   def send_keyboard
