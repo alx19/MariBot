@@ -7,13 +7,14 @@ class Mari
   end
 
   def handle_request
-    if @message.respond_to? 'data'
+    case @message
+    when Telegram::Bot::Types::CallbackQuery
       @verdict, @global_id = @message.data.split
       event_data
       send_message(chat_id: @chat_id, text: prepare_verdict('user'))
       send_message(chat_id: @chat_id, text: @replies['waiting']['message'])
       update_messages
-    else
+    when Telegram::Bot::Types::Message
       send_message(chat_id: @admin_id, text: 'Да, вы Мари! Ну или Алиса.')
     end
   end

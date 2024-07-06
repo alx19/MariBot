@@ -12,10 +12,7 @@ class Petitioner
   end
 
   def handle_request
-    unless @message.text
-      send_message(chat_id: @id, text: replies['error']['message'])
-      return
-    end
+    return unless @message.is_a?(Telegram::Bot::Types::Message)
 
     return handle_custom_option(@message.text) if OPTIONS.include?(@message.text)
 
