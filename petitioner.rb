@@ -8,6 +8,7 @@ class Petitioner
     @id = id
     @bot = bot
     @message = message
+    @error_code = nil
     @state = state
   end
 
@@ -61,23 +62,42 @@ class Petitioner
       set_state
     when 'submitted'
       set_by_type('info', @message.text)
-      send_message(chat_id: @id, text: replies['request']['submitted']['message'])
+      notify_result = notify_admins 
+      if notify_result == :message_too_long
+        send_message(chat_id: @id, text: replies['error']['too_long'])
+      else
+        send_message(chat_id: @id, text: replies['request']['submitted']['message'])
+      end
       send_keyboard
-      notify_admins
       set_state
     end
   end
 
   def send_message(params)
-    @bot.api.send_message(**params)
-  rescue => e
-    MyLogger.new.log(e, params[:text])
+    retries = 3
+    begin
+      @bot.api.send_message(**params)
+    rescue Telegram::Bot::Exceptions::ResponseError => e
+      @error_code = e.data["error_code"]
+    rescue Faraday::Error::ConnectionFailed => e
+      puts "Connection failed: #{e}"
+      if retries > 0
+        puts "Retrying..."
+        retries -= 1
+        retry
+      else
+        puts "Max retries reached. Unable to send message: #{params[:text]}."
+      end
+    rescue => e
+      MyLogger.new.log(e, params[:text])
+    end
   end
 
   def notify_admins
     text = mari_notification
     messages = ADMINS.map do |admin|
       message = send_message(chat_id: admin, text: text, reply_markup: mari_keyboard, parse_mode: 'HTML')
+      return :message_too_long if @error_code == 400
       [admin, message.message_id]
     end
     REDIS.hmset("messages_#{global_id}", 'text', text, *messages.flatten)
@@ -207,6 +227,8 @@ class Petitioner
   end
 
   def message_entities
+    return unless @message.entities
+
     @message.entities.map do |entitie|
       next unless entitie.type == "text_link"
       entitie.url

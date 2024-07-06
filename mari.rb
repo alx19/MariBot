@@ -29,9 +29,20 @@ class Mari
   end
 
   def send_message(params)
+    retries = 3
     begin
       @bot.api.send_message(**params)
-    rescue
+    rescue Faraday::Error::ConnectionFailed => e
+      puts "Connection failed: #{e}"
+      if retries > 0
+        puts "Retrying..."
+        retries -= 1
+        retry
+      else
+        puts "Max retries reached. Unable to send message: #{params[:text]}."
+      end
+    rescue => e
+      MyLogger.new.log(e, params[:text])
     end
   end
 
