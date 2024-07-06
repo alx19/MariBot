@@ -201,8 +201,16 @@ class Petitioner
       "Дата и время: #{event_info[2]}",
       "Место: #{event_info[3]}",
       "Описание: #{event_info[4]}",
-      "ID заявки: #{global_id}"
+      "ID заявки: #{global_id}",
+      "Ссылки: #{message_entities}"
     ].join("\n")
+  end
+
+  def message_entities
+    @message.entities.map do |entitie|
+      next unless entitie.type == "text_link"
+      entitie.url
+    end.compact.join("\n")
   end
 
   def mari_keyboard
